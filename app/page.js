@@ -52,6 +52,9 @@ const sections = [
 export default function Home() {
   const [ready, setReady] = useState(false)
   const [showMain, setShowMain] = useState(false)
+  const [showTopArrow, setShowTopArrow] = useState(false)
+  const [showBottomArrow, setShowBottomArrow] = useState(true)
+  const [nearRSVP, setNearRSVP] = useState(false)
 
   useEffect(() => { setReady(true) }, [])
 
@@ -63,6 +66,26 @@ export default function Home() {
     document.body.style.overflow = showMain ? '' : 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [showMain])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY
+      const screen = window.innerHeight
+      const height = document.documentElement.scrollHeight
+
+      setShowTopArrow(scrollTop > 150)
+      setShowBottomArrow(scrollTop + screen < height - 150)
+
+      const rsvp = document.getElementById("rsvp")
+      if (rsvp) {
+        const pos = rsvp.getBoundingClientRect()
+        setNearRSVP(pos.top < screen * 0.75)
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   if (!ready) return null
 
@@ -96,6 +119,56 @@ export default function Home() {
               </motion.div>
             ))}
             <MusicPlayer />
+
+            <AnimatePresence>
+              {nearRSVP && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                  onClick={() => {
+                    document.getElementById("rsvp").scrollIntoView({ behavior: "smooth" })
+                  }}
+                  className="fixed right-5 bottom-28 z-50 px-6 py-3 rounded-full bg-white/10 backdrop-blur-xl border border-[#f6dc7b]/50 text-white text-sm tracking-wide shadow-[0_0_25px_rgba(246,220,123,.45)] cursor-pointer"
+                >
+                  ✨ Confirma tu asistencia
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-3">
+              <AnimatePresence>
+                {showTopArrow && (
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.5, x: 20 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.5, x: 20 }}
+                    onClick={() => {
+                      window.scrollBy({ top: -window.innerHeight, behavior: "smooth" })
+                    }}
+                    className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl border border-[#f6dc7b]/50 text-[#f6dc7b] shadow-[0_0_18px_rgba(246,220,123,.4)]"
+                  >
+                    ↑
+                  </motion.button>
+                )}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {showBottomArrow && (
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.5, x: 20 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.5, x: 20 }}
+                    onClick={() => {
+                      window.scrollBy({ top: window.innerHeight, behavior: "smooth" })
+                    }}
+                    className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl border border-[#f6dc7b]/50 text-[#f6dc7b] shadow-[0_0_18px_rgba(246,220,123,.4)]"
+                  >
+                    ↓
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
           </motion.main>
         )}
       </AnimatePresence>
